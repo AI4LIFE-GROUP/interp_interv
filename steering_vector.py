@@ -6,7 +6,6 @@ from datasets import load_dataset
 import pandas as pd
 from sklearn import linear_model
 import copy
-from object_class import ObjectClass
 from metrics import *
 from tqdm import tqdm
 import argparse
@@ -44,7 +43,7 @@ def main():
     for param in model.parameters():
         param.requires_grad = False
 
-    pairs = pd.read_csv('chat_intervention/' + args.intervention_phrase + "_pairs2.csv", dtype=str, header=0)
+    pairs = pd.read_csv('data/' + args.intervention_phrase + "_pairs.csv", dtype=str, header=0)
 
     steering_v = []
     if args.model != "gpt2":
@@ -68,8 +67,7 @@ def main():
                 with model.trace() as tracer:
                     with tracer.invoke(pair["neg_prompt"]):
                         p_neg = model.transformer.h[args.layer_idx].output[0].save()
-                # steering_v.append(p_pos[:, 1:].mean(1) - p_neg[:, 1:].mean(1))
-                steering_v.append(p_pos[:, -1] - p_neg[:, -1])
+                steering_v.append(p_pos[:, 1:].mean(1) - p_neg[:, 1:].mean(1))
 
     steering_v = torch.cat(steering_v).mean(0).unsqueeze(0)
 
